@@ -1,0 +1,15 @@
+{
+  "name": "feedbackhub",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Multi-tenant customer feedback & feature-request SaaS",
+  "packageManager": "pnpm@11.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r --parallel typecheck"
+  }
+}
