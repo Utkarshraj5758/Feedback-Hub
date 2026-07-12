@@ -8,14 +8,20 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "dotenv -e ../../.env -- prisma generate",
+    "db:migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "db:check": "dotenv -e ../../.env -- tsx prisma/check.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.2.1",
     "express": "^5.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/node": "^24.0.0",
+    "dotenv-cli": "^8.0.0",
+    "prisma": "^6.2.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
