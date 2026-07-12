@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.12.0 # keep in sync with packageManager in package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm # needs pnpm already on PATH → after action-setup
+
+      - run: pnpm install --frozen-lockfile
+
+      # apps/api typecheck needs generated Prisma Client types. Bare `prisma
+      # generate` (not the db:generate script) reads only the schema — no .env / DB.
+      - run: pnpm --filter @feedbackhub/api exec prisma generate
+
+      - run: pnpm -r typecheck
