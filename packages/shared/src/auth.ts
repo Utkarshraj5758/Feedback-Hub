@@ -1,0 +1,17 @@
+import { z } from "zod";
+
+// Auth request schemas shared between the web client (validation) and — in a
+// later slice — the api. Values must match the api's server-side schemas.
+export const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(1, "Name is required"),
+  organizationName: z.string().min(1).optional(),
+});
+export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1, "Password is required"),
+});
+export type LoginInput = z.infer<typeof loginSchema>;
