@@ -18,6 +18,8 @@ model User {
   name         String
   createdAt    DateTime @default(now())
 
+  memberships Membership[]
+
   @@map("users")
 }
 
@@ -35,5 +37,29 @@ model Organization {
   subscriptionStatus String?
   createdAt          DateTime @default(now())
 
+  memberships Membership[]
+
   @@map("organizations")
+}
+
+enum Role {
+  owner
+  admin
+  member
+}
+
+// Join table between users and organizations — the multi-tenancy backbone.
+// A user's role is scoped to a single organization.
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  orgId     String
+  role      Role     @default(member)
+  createdAt DateTime @default(now())
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@map("memberships")
 }
