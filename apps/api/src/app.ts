@@ -1,6 +1,9 @@
 import express, { type Express, type Request, type Response } from "express";
 import cookieParser from "cookie-parser";
 import { authRouter } from "./auth/router.js";
+import { boardsRouter } from "./domain/boards.router.js";
+import { postsRouter } from "./domain/posts.router.js";
+import { commentsRouter } from "./domain/comments.router.js";
 import { errorHandler } from "./middleware/error.js";
 
 /**
@@ -18,6 +21,9 @@ export function createApp(): Express {
   });
 
   app.use("/auth", authRouter);
+  app.use("/boards", boardsRouter);
+  app.use("/posts", postsRouter);
+  app.use("/comments", commentsRouter);
 
   // Error handler must be registered last.
   app.use(errorHandler);

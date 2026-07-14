@@ -25,4 +25,7 @@ module.exports = {
   testMatch: ["**/test/**/*.test.ts"],
   // Tests hit the live Neon DB, so allow generous per-test time.
   testTimeout: 30000,
+  // Run suites serially: they share one external Postgres (Neon), and parallel
+  // workers compete for connections on the direct endpoint and flake on cold start.
+  maxWorkers: 1,
 };

@@ -15,6 +15,7 @@
     "db:check": "dotenv -e ../../.env -- tsx prisma/check.ts"
   },
   "dependencies": {
+    "@feedbackhub/shared": "workspace:*",
     "@prisma/client": "^6.2.1",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
