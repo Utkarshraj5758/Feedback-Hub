@@ -79,3 +79,30 @@ export async function apiFetch(
   }
   return apiFetch(path, { ...init, _retried: true });
 }
+
+/**
+ * apiFetch + JSON parsing. Throws ApiError (with the server's `error` message
+ * when present) on non-2xx. Shared by authApi and domainApi.
+ */
+export async function apiJson<T>(
+  path: string,
+  init: FetchOptions = {},
+): Promise<T> {
+  const res = await apiFetch(path, init);
+  if (!res.ok) {
+    let message = `Request failed (${res.status})`;
+    try {
+      const body = (await res.json()) as { error?: string };
+      if (body.error) message = body.error;
+    } catch {
+      // non-JSON error body — keep the generic message
+    }
+    throw new ApiError(res.status, message);
+  }
+  return (await res.json()) as T;
+}
+
+/** Convenience for JSON POST/PATCH bodies. */
+export function jsonBody(data: unknown): RequestInit {
+  return { body: JSON.stringify(data) };
+}

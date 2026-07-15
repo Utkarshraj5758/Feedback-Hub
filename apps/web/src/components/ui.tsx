@@ -1,4 +1,8 @@
-import type { InputHTMLAttributes, ReactNode } from "react";
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+} from "react";
 
 export function AuthLayout({
   title,
@@ -50,6 +54,23 @@ export function SubmitButton({
       type="submit"
       disabled={disabled}
       className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {children}
+    </button>
+  );
+}
+
+// Inline action button (auto width), distinct from the full-width SubmitButton
+// used on the auth forms. Same gray-900 styling.
+export function Button({
+  children,
+  className = "",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className={`rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {children}
     </button>
