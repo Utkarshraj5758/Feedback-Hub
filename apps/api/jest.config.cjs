@@ -2,6 +2,10 @@
 module.exports = {
   testEnvironment: "node",
   moduleNameMapper: {
+    // Resolve the shared workspace package to its TS source so ts-jest compiles
+    // it to CJS. The package's exports now point Node at built ESM (dist), which
+    // Jest's CommonJS require() can't load — this mapper keeps tests on source.
+    "^@feedbackhub/shared$": "<rootDir>/../../packages/shared/src/index.ts",
     // Our source uses explicit .js import specifiers (ESM style). In the CJS
     // test build, strip the extension so ./x.js resolves to the ./x.ts source.
     "^(\\.{1,2}/.*)\\.js$": "$1",
