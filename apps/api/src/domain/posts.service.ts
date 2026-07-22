@@ -103,18 +103,23 @@ export async function updatePost(
   actor: Actor,
   input: UpdatePostInput,
 ) {
-  await loadOwnedPost(orgId, id, actor);
-  const post = await prisma.post.update({
-    where: { id },
+  await loadOwnedPost(orgId, id, actor); // author-or-admin authz
+  // Org scope in the write itself (defense-in-depth); updateMany needs the
+  // compound relation filter since id alone isn't org-unique.
+  const result = await prisma.post.updateMany({
+    where: { id, board: { orgId } },
     data: { title: input.title, body: input.body },
-    include: counts(actor.userId),
   });
-  return serialize(post);
+  if (result.count === 0) throw new NotFoundError("Post not found");
+  return getPost(orgId, id, actor.userId);
 }
 
 export async function deletePost(orgId: string, id: string, actor: Actor) {
-  await loadOwnedPost(orgId, id, actor);
-  await prisma.post.delete({ where: { id } });
+  await loadOwnedPost(orgId, id, actor); // author-or-admin authz
+  const result = await prisma.post.deleteMany({
+    where: { id, board: { orgId } },
+  });
+  if (result.count === 0) throw new NotFoundError("Post not found");
 }
 
 // Admin/owner only (enforced by requireRole at the route); still org-scoped.
@@ -124,15 +129,10 @@ export async function updatePostStatus(
   status: PostStatus,
   userId: string,
 ) {
-  const existing = await prisma.post.findFirst({
+  const result = await prisma.post.updateMany({
     where: { id, board: { orgId } },
-    select: { id: true },
-  });
-  if (!existing) throw new NotFoundError("Post not found");
-  const post = await prisma.post.update({
-    where: { id },
     data: { status },
-    include: counts(userId),
   });
-  return serialize(post);
+  if (result.count === 0) throw new NotFoundError("Post not found");
+  return getPost(orgId, id, userId);
 }

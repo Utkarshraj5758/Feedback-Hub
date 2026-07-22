@@ -26,14 +26,17 @@ export async function updateBoard(
   id: string,
   input: UpdateBoardInput,
 ) {
-  await getBoard(orgId, id); // 404 unless the board is in this org
-  return prisma.board.update({
-    where: { id },
+  // Org scope lives in the write itself, so isolation holds regardless of any
+  // caller-side check. updateMany needs a compound where (id isn't org-unique).
+  const result = await prisma.board.updateMany({
+    where: { id, orgId },
     data: { name: input.name, isPublic: input.isPublic },
   });
+  if (result.count === 0) throw new NotFoundError("Board not found");
+  return getBoard(orgId, id);
 }
 
 export async function deleteBoard(orgId: string, id: string) {
-  await getBoard(orgId, id);
-  await prisma.board.delete({ where: { id } });
+  const result = await prisma.board.deleteMany({ where: { id, orgId } });
+  if (result.count === 0) throw new NotFoundError("Board not found");
 }

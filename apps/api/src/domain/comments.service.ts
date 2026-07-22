@@ -60,15 +60,24 @@ export async function updateComment(
   actor: Actor,
   input: UpdateCommentInput,
 ) {
-  await loadOwnedComment(orgId, id, actor);
-  return prisma.comment.update({
-    where: { id },
+  await loadOwnedComment(orgId, id, actor); // author-or-admin authz
+  const result = await prisma.comment.updateMany({
+    where: { id, post: { board: { orgId } } },
     data: { body: input.body },
+  });
+  if (result.count === 0) throw new NotFoundError("Comment not found");
+  const comment = await prisma.comment.findFirst({
+    where: { id, post: { board: { orgId } } },
     ...withAuthor,
   });
+  if (!comment) throw new NotFoundError("Comment not found");
+  return comment;
 }
 
 export async function deleteComment(orgId: string, id: string, actor: Actor) {
-  await loadOwnedComment(orgId, id, actor);
-  await prisma.comment.delete({ where: { id } });
+  await loadOwnedComment(orgId, id, actor); // author-or-admin authz
+  const result = await prisma.comment.deleteMany({
+    where: { id, post: { board: { orgId } } },
+  });
+  if (result.count === 0) throw new NotFoundError("Comment not found");
 }

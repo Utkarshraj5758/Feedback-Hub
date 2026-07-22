@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import { Prisma, type User } from "@prisma/client";
+import type { LoginInput, RegisterInput } from "@feedbackhub/shared";
 import { prisma } from "../db.js";
 import { ConflictError, UnauthorizedError } from "../http/errors.js";
-import type { LoginInput, RegisterInput } from "./schemas.js";
 
 const BCRYPT_COST = 12;
 
@@ -71,8 +71,12 @@ export async function loginUser(input: LoginInput): Promise<LoginResult> {
   const valid = await bcrypt.compare(input.password, user.passwordHash);
   if (!valid) throw new UnauthorizedError("Invalid credentials");
 
+  // Deterministic org selection: the earliest membership is the org created for
+  // the user at registration (their home org). Stable once Phase 3 invites add
+  // later memberships, until explicit org-switching exists.
   const membership = await prisma.membership.findFirst({
     where: { userId: user.id },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
   if (!membership) throw new UnauthorizedError("Invalid credentials");
 

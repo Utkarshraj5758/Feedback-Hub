@@ -16,7 +16,10 @@ export async function toggleVote(orgId: string, postId: string, userId: string) 
     where: { postId_userId: { postId, userId } },
   });
   if (existing) {
-    await prisma.vote.delete({ where: { id: existing.id } });
+    // Scope the delete through the post→board→org relation for defense-in-depth.
+    await prisma.vote.deleteMany({
+      where: { id: existing.id, post: { board: { orgId } } },
+    });
   } else {
     await prisma.vote.create({ data: { postId, userId } });
   }

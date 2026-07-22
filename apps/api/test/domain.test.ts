@@ -137,4 +137,44 @@ describe("domain", () => {
       .send({ title: "sneaky", body: "x" });
     expect(post.status).toBe(404);
   });
+
+  it("scopes writes by org: foreign 404 on update/delete/status; owner can update+delete own", async () => {
+    // A foreign-org owner cannot mutate orgA's board or post, even though the
+    // org scope now lives in the write itself (updateMany/deleteMany).
+    const foreignUpdate = await request(app)
+      .patch(`/boards/${boardId}`)
+      .set("Authorization", auth(ownerB.token))
+      .send({ name: "hijacked" });
+    expect(foreignUpdate.status).toBe(404);
+
+    const foreignStatus = await request(app)
+      .patch(`/posts/${postId}/status`)
+      .set("Authorization", auth(ownerB.token))
+      .send({ status: "done" });
+    expect(foreignStatus.status).toBe(404);
+
+    const foreignDelete = await request(app)
+      .delete(`/boards/${boardId}`)
+      .set("Authorization", auth(ownerB.token));
+    expect(foreignDelete.status).toBe(404);
+
+    // Owner can update + delete a board in their own org (throwaway board).
+    const created = await request(app)
+      .post("/boards")
+      .set("Authorization", auth(ownerA.token))
+      .send({ name: "Temp Board" });
+    const tempId = created.body.board.id;
+
+    const update = await request(app)
+      .patch(`/boards/${tempId}`)
+      .set("Authorization", auth(ownerA.token))
+      .send({ name: "Renamed" });
+    expect(update.status).toBe(200);
+    expect(update.body.board.name).toBe("Renamed");
+
+    const del = await request(app)
+      .delete(`/boards/${tempId}`)
+      .set("Authorization", auth(ownerA.token));
+    expect(del.status).toBe(204);
+  });
 });

@@ -75,4 +75,14 @@ describe("auth", () => {
     const res = await request(app).get("/auth/me");
     expect(res.status).toBe(401);
   });
+
+  it("returns 400 (not 500) for a malformed JSON body", async () => {
+    // Parser fails before routing → no DB touched. Should be a clean client error.
+    const res = await request(app)
+      .post("/auth/register")
+      .set("Content-Type", "application/json")
+      .send('{ "email": "x@example.com", '); // truncated / invalid JSON
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
 });

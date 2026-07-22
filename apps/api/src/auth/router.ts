@@ -1,8 +1,8 @@
 import { Router, type Request, type Response } from "express";
+import { loginSchema, registerSchema } from "@feedbackhub/shared";
 import { prisma } from "../db.js";
 import { UnauthorizedError } from "../http/errors.js";
 import { requireAuth } from "./middleware.js";
-import { loginSchema, registerSchema } from "./schemas.js";
 import { loginUser, registerUser, toPublicUser } from "./service.js";
 import {
   REFRESH_COOKIE,
@@ -43,7 +43,11 @@ authRouter.post("/refresh", async (req: Request, res: Response) => {
     throw new UnauthorizedError("Invalid refresh token");
   }
 
-  const membership = await prisma.membership.findFirst({ where: { userId } });
+  // Earliest membership = the user's home org (see loginUser), for stable refresh.
+  const membership = await prisma.membership.findFirst({
+    where: { userId },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+  });
   if (!membership) {
     res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
     throw new UnauthorizedError("Invalid refresh token");
